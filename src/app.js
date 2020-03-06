@@ -11,7 +11,6 @@ import './styles/styles.scss'
 import 'react-dates/lib/css/_datepicker.css'
 
 const store = configureStore()
-
 const jsx = (
     // Define the store that you want to provide to all of the components
     <Provider store={store}>
