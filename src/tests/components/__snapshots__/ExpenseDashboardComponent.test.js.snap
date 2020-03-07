@@ -2,6 +2,7 @@
 
 exports[`should render ExpenseDashboardComponent correctly 1`] = `
 <div>
+  <Connect(ExpenseSummaryComponent) />
   <Connect(ExpenseListFilters) />
   <Connect(ExpenseList) />
 </div>
