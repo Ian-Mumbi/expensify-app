@@ -1,4 +1,11 @@
-import { addExpense, removeExpense, editExpense} from '../../actions/expenses'
+import configureMockStore from 'redux-mock-store'
+import thunk from 'redux-thunk'
+import { startAddExpense, addExpense, removeExpense, editExpense} from '../../actions/expenses'
+import expenses from '../fixtures/expenses'
+import database from '../../firebase/firebase'
+
+const middleware = [thunk]
+const createMockStore = configureMockStore(middleware)
 
 test('should setup remove expense action object', () => {
     const action = removeExpense({ id: '123abc' })
@@ -21,33 +28,66 @@ test('should setup edit expense action object', () => {
 })
 
 test('should setup add action object with provided values', () => {
-    const expenseData = {
-        description: 'Rent',
-        note: 'This was last months rent.',
-        amount: 109500,
-        createdAt: 1000
-    }
-    const action = addExpense(expenseData)
+    const action = addExpense(expenses[2])
     expect(action).toEqual({
         type: 'ADD_EXPENSE',
-        expense: {
-            ...expenseData,
-            id: expect.any(String) // beacause this is dynamic we don't know exact value but its of type String
-        }
+        expense: expenses[2]
     })
 })
 
-test('should setup add action object with default values', () => {
-    const action = addExpense()
-    expect(action).toEqual({
-        type: 'ADD_EXPENSE',
-        expense: {
-            id: expect.any(String),
-            description: '',
-            note: '',
-            amount: 0, 
-            createdAt: 0
-        }
+test('Should add expense to database and store', (done) => {
+    const store = createMockStore({}) // Create mock store and use this to know if an action was dispatched
+
+    const expenseData = {
+        description: 'House',
+        amount: 450000,
+        note: 'This is for my mom',
+        createdAt: 785656789
+    }
+    // Check if action was dispatched
+    store.dispatch(startAddExpense(expenseData)).then( () => {
+        const actions = store.getActions()
+        expect(actions[0]).toEqual({
+            type: 'ADD_EXPENSE',
+            expense: {
+                id: expect.any(String),
+                ...expenseData
+            }
+        })
+        console.log('action', actions)
+        // Check if database was changed
+        return database.ref(`expenses/${actions[0].expense.id}`).once('value')
+    }).then((snapshot) => {
+        expect(snapshot.val()).toEqual(expenseData)
+        done()
+    })
+})
+
+test('Should add expense with defaults to database and store', (done) => {
+    const store = createMockStore({}) // Create mock store and use this to know if an action was dispatched
+
+    const expenseData = {
+        description: '',
+        amount: 0,
+        note: '',
+        createdAt: 0
+    }
+    // Check if action was dispatched
+    store.dispatch(startAddExpense({})).then(() => {
+        const actions = store.getActions()
+        expect(actions[0]).toEqual({
+            type: 'ADD_EXPENSE',
+            expense: {
+                id: expect.any(String),
+                ...expenseData
+            }
+        })
+        console.log('action', actions)
+        // Check if database was changed
+        return database.ref(`expenses/${actions[0].expense.id}`).once('value')
+    }).then((snapshot) => {
+        expect(snapshot.val()).toEqual(expenseData)
+        done()
     })
 })
 
