@@ -161,10 +161,7 @@ test('Should update expenses from firebase', (done) => {
 
         return database.ref(`expenses/${id}`).once('value')
     }).then((snapshot) => {
-        expect(snapshot.val()).toEqual({
-            ...snapshot.val(),
-            ...updates
-        })
+        expect(snapshot.val().description).toBe(updates.description)
         done()
     })
 })
